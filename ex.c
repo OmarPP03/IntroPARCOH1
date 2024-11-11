@@ -167,7 +167,7 @@ float** matTransposeImp(float** matrix, int size){
     if (trans[i] == NULL){
       printf("Memory not allocated for row number %d in transposed matrix.\n", i);
       for(int j = 0; j < i; j++){
-        free(trans[i]);
+        free(trans[j]);
       }
       free(trans);
       return NULL;
