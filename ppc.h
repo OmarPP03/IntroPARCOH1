@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #ifndef __PPC_H__
 #define __PPC_H__
+#define BLOCK_SIZE 8
 
 
 float getRandomFloat(float min, float max);
