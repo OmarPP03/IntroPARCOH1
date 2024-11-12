@@ -58,7 +58,7 @@ float** matTransposeImp(float** matrix, int size) {
   }
 
   for (int i = 0; i < size; i++) {
-    trans[i] = (float*) aligned_alloc(32, size * sizeof(float)); 
+    trans[i] = (float*) _mm_malloc(size * sizeof(float), 32);
     if (trans[i] == NULL) {
       printf("Memory not allocated for row number %d in transposed matrix.\n", i);
       for (int j = 0; j < i; j++) {
@@ -69,13 +69,14 @@ float** matTransposeImp(float** matrix, int size) {
     }
   }
 
+  // Blocked and aligned transpose with SIMD
+  #pragma vector aligned
   for (int i = 0; i < size; i += BLOCK_SIZE) {
     for (int j = 0; j < size; j += BLOCK_SIZE) {
       for (int ii = i; ii < size && ii < i + BLOCK_SIZE; ii++) {
-        for (int jj = j; jj < size && jj < j + BLOCK_SIZE; jj += 8) {
-          printf(" Processing block: i=%d, j=%d, ii=%d, jj=%d\n", i, j, ii, jj);
-          __m256 row = _mm256_load_ps(&matrix[ii][jj]);
-          _mm256_store_ps(&trans[jj][ii], row);
+        for (int jj = j; jj < size && jj + 8 <= size && jj < j + BLOCK_SIZE; jj += 8) {
+          __m256 row = _mm256_loadu_ps(&matrix[ii][jj]);   // Safe load with boundary check
+          _mm256_storeu_ps(&trans[jj][ii], row);           // Safe store with boundary check
         }
       }
     }

@@ -1,4 +1,5 @@
 #include "ppc.h"
+#include "immintrin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h> // Used for time measurments
@@ -15,7 +16,7 @@ int main(){
   scanf("%d", &exp);
   const int SIZE = 1 << exp;
 
-  float** a = (float**) malloc(SIZE * sizeof(float*));       
+  float** a = (float**) malloc( SIZE * sizeof(float*));       
   
   if (a == NULL){                                               
     printf("Memory not allocated.\n");
@@ -23,12 +24,11 @@ int main(){
   }
 
   for(int i = 0; i < SIZE; i++){                                
-    a[i] = (float*) malloc(SIZE * sizeof(float));
+    a[i] = (float*) _mm_malloc(SIZE * sizeof(float), 32);
     if(a[i] == NULL){
       printf("Memory not allocated for row %d.\n", i);
       for(int j = 0; j < i; j++){
         free(a[j]);
-
       }
       free(a);
       return EXIT_FAILURE;
@@ -95,9 +95,9 @@ int main(){
   */
   
   for(int i = 0; i < SIZE; i++){                                
-    free(a[i]);
+    _mm_free(a[i]);
     free(b[i]);
-    free(c[i]);
+    _mm_free(c[i]);
   }
 
 
