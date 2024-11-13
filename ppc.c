@@ -17,6 +17,32 @@ bool checkSym(float** matrix, int size) {
   return true;
 }
 
+bool checkSymImp(float** matrix, int size) {
+  for (int i = 0; i < size; i++) {
+    int j;
+
+    // Vectorized comparison for chunks of 8 elements
+    for (j = 0; j <= i - 8; j += 8) {
+      __m256 row_data = _mm256_loadu_ps(&matrix[i][j]);
+      __m256 col_data = _mm256_loadu_ps(&matrix[j][i]);
+      __m256 cmp = _mm256_cmp_ps(row_data, col_data, _CMP_NEQ_UQ);
+
+      // If any elements are unequal, return false
+      if (!_mm256_testz_ps(cmp, cmp)) {
+        return false;
+      }
+    }
+
+    // Scalar fallback for remaining elements if `i` is not a multiple of 8
+    for (; j < i; j++) {
+      if (matrix[i][j] != matrix[j][i]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 float** matTranspose(float** matrix, int size) {
   float** trans = (float**) malloc(size * sizeof(float*));
   if (trans == NULL) {
@@ -43,37 +69,29 @@ float** matTranspose(float** matrix, int size) {
 }
 
 float** matTransposeImp(float** matrix, int size) {
-  // Allocate transposed matrix with proper alignment
+  // Allocate aligned memory for the transposed matrix
   float** trans = (float**) aligned_alloc(32, size * sizeof(float*));
   if (trans == NULL) {
     printf("Memory not allocated for transposed matrix.\n");
     return NULL;
   }
 
-  size_t row_size = ((size * sizeof(float) + 31) / 32) * 32; // Align rows to 32 bytes
   for (int i = 0; i < size; i++) {
-    trans[i] = (float*) aligned_alloc(32, row_size);
+    trans[i] = (float*) aligned_alloc(32, size * sizeof(float));
     if (trans[i] == NULL) {
-      printf("Memory not allocated for row %d in transposed matrix.\n", i);
+      printf("Memory not allocated for transposed matrix row %d.\n", i);
       for (int j = 0; j < i; j++) free(trans[j]);
       free(trans);
       return NULL;
     }
   }
 
-  // Transpose without blocking, using AVX2 for 8 elements at a time
+  // Perform the transpose using vectorized load/store operations
   for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j += 8) {
-      if (j + 8 <= size) {
-        // Use AVX2 to load 8 floats from matrix[i][j] and store in transposed position
-        __m256 row = _mm256_load_ps(&matrix[i][j]);  // Load 8 floats from row `i`
-        _mm256_store_ps(&trans[j][i], row);          // Store them as column `j` in transposed matrix
-      } else {
-        // Handle the case where fewer than 8 elements remain (e.g., near end of row)
-        for (int k = j; k < size; k++) {
-          trans[k][i] = matrix[i][k];
-        }
-      }
+    #pragma simd
+    for (int j = 0; j < size; j += 8) { // Process 8 elements at a time
+      __m256 row_data = _mm256_loadu_ps(&matrix[j][i]); // Load 8 floats from matrix column
+      _mm256_storeu_ps(&trans[i][j], row_data);         // Store to transposed row
     }
   }
 
