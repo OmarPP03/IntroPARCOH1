@@ -16,7 +16,7 @@ int main(){
   scanf("%d", &exp);
   const int SIZE = 1 << exp;
 
-  float** a = (float**) malloc( SIZE * sizeof(float*));       
+  float** a = (float**) aligned_alloc(32, SIZE * sizeof(float*));       
   
   if (a == NULL){                                               
     printf("Memory not allocated.\n");
@@ -24,7 +24,7 @@ int main(){
   }
 
   for(int i = 0; i < SIZE; i++){                                
-    a[i] = (float*) _mm_malloc(SIZE * sizeof(float), 32);
+    a[i] = (float*) aligned_alloc(32, SIZE * sizeof(float));
     if(a[i] == NULL){
       printf("Memory not allocated for row %d.\n", i);
       for(int j = 0; j < i; j++){
@@ -95,9 +95,9 @@ int main(){
   */
   
   for(int i = 0; i < SIZE; i++){                                
-    _mm_free(a[i]);
+    free(a[i]);
     free(b[i]);
-    _mm_free(c[i]);
+    free(c[i]);
   }
 
 
