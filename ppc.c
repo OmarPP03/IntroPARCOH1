@@ -62,36 +62,37 @@ float** matTranspose(float** matrix, int size) {
 
   for (int i = 0; i < size; i++) {
     for (int j = 0; j < size; j++) {
-      trans[i][j] = matrix[j][i];
+      trans[j][i] = matrix[i][j];
     }
   }
   return trans;
 }
 
 float** matTransposeImp(float** matrix, int size) {
-  // Allocate aligned memory for the transposed matrix
-  float** trans = (float**) aligned_alloc(32, size * sizeof(float*));
-  if (trans == NULL) {
+
+  float* data = (float*) malloc(size * size * sizeof(float));
+  float** trans = (float**) malloc(size * sizeof(float*));
+  if (trans == NULL || data == NULL) {
     printf("Memory not allocated for transposed matrix.\n");
+    free(data);
     return NULL;
   }
 
   for (int i = 0; i < size; i++) {
-    trans[i] = (float*) aligned_alloc(32, size * sizeof(float));
-    if (trans[i] == NULL) {
-      printf("Memory not allocated for transposed matrix row %d.\n", i);
-      for (int j = 0; j < i; j++) free(trans[j]);
-      free(trans);
-      return NULL;
-    }
+    trans[i] = &data[i * size];
   }
+  
 
-  // Perform the transpose using vectorized load/store operations
-  for (int i = 0; i < size; i++) {
-    #pragma simd
-    for (int j = 0; j < size; j += 8) { // Process 8 elements at a time
-      __m256 row_data = _mm256_loadu_ps(&matrix[j][i]); // Load 8 floats from matrix column
-      _mm256_storeu_ps(&trans[i][j], row_data);         // Store to transposed row
+  for (int i = 0; i < size; i += 8) {          // Process 8 rows at a time
+    for (int j = 0; j < size; j++) {          // Process each column in these 8 rows
+      // Load 8 elements from the i-th row to (i+7)-th row at column j
+      __m256 row_data = _mm256_set_ps(
+        matrix[i+7][j], matrix[i+6][j], matrix[i+5][j], matrix[i+4][j],
+        matrix[i+3][j], matrix[i+2][j], matrix[i+1][j], matrix[i][j]
+      );
+
+      // Store transposed elements into `trans[j][i]` to `trans[j][i+7]`
+      _mm256_storeu_ps(&trans[j][i], row_data);
     }
   }
 

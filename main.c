@@ -16,7 +16,7 @@ int main(){
   scanf("%d", &exp);
   const int SIZE = 1 << exp;
 
-  float** a = (float**) malloc( SIZE * sizeof(float*));       
+  float** a = (float**) malloc(SIZE * sizeof(float*));       
   
   if (a == NULL){                                               
     printf("Memory not allocated.\n");
@@ -40,7 +40,8 @@ int main(){
       a[i][j] = getRandomFloat(0.0, 99999.9);
     }
   }
-  
+ 
+  /*
  
   for(int i = 0; i < SIZE; i++){                                
     for(int j = 0; j < SIZE; j++){
@@ -48,6 +49,7 @@ int main(){
     }
   }
    
+   */
 
   clock_gettime(CLOCK_REALTIME, &start);
 
@@ -93,22 +95,24 @@ int main(){
 
   printf(" Elapsed time for transpose operation imp: %.11f seconds.\n\n", elapsed);
 
-
+/*
   for(int i = 0; i < SIZE; i++){                                
     for(int j = 0; j < SIZE; j++){
       printf("trans[%d][%d] = %f \n", i, j, c[i][j]);
     }
   }
+  */
+  
   
   for(int i = 0; i < SIZE; i++){                                
     free(a[i]);
     free(b[i]);
-    free(c[i]);
   }
 
 
   free(a);                                                       
   free(b);
+  free(c[0]);
   free(c);
   return 0;
 }
