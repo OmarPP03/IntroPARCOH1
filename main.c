@@ -71,6 +71,16 @@ int main(){
   
   printf("\n Elapsed time for sym check imp: %.11f seconds.\n", elapsed);
 
+  clock_gettime(CLOCK_REALTIME, &start);
+
+  sym = checkSymOMP(a, SIZE);               
+
+  clock_gettime(CLOCK_REALTIME, &end);
+
+  elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+  
+  printf("\n Elapsed time for sym check omp: %.11f seconds.\n", elapsed);
+
   printf("\n Is the matrix symmetric? %s", sym ? "Yes.\n\n" : "No.\n\n");
 
 
@@ -93,7 +103,19 @@ int main(){
 
   elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-  printf(" Elapsed time for transpose operation imp: %.11f seconds.\n\n", elapsed);
+  printf(" Elapsed time for transpose operation imp: %.11f seconds.\n", elapsed);
+
+
+
+  clock_gettime(CLOCK_REALTIME, &start);
+
+  float** d = matTransposeOMP(a, SIZE);
+
+  clock_gettime(CLOCK_REALTIME, &end);
+
+  elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
+  printf(" Elapsed time for transpose operation omp: %.11f seconds.\n\n", elapsed);
 
 /*
   for(int i = 0; i < SIZE; i++){                                
@@ -107,6 +129,7 @@ int main(){
   for(int i = 0; i < SIZE; i++){                                
     free(a[i]);
     free(b[i]);
+    free(d[i]);
   }
 
 
@@ -114,6 +137,7 @@ int main(){
   free(b);
   free(c[0]);
   free(c);
+  free(d);
   return 0;
 }
 

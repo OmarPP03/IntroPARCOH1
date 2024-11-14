@@ -1,5 +1,6 @@
 #include "immintrin.h"
 #include "ppc.h"
+#include <omp.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -31,6 +32,22 @@ bool checkSymImp(float** matrix, int size) {
     }
   }
   return true;
+}
+
+
+bool checkSymOMP(float** matrix, int size) {
+  bool isSymmetric = true;
+  #pragma omp parallel for shared(isSymmetric)
+  for (int i = 1; i < size; i++) {
+    #pragma omp simd
+    for (int j = 0; j < i; j++) {
+      if (!isSymmetric) continue;
+      if (matrix[i][j] != matrix[j][i]) {
+        isSymmetric = false;
+      }
+    }
+  }
+  return isSymmetric;
 }
 
 float** matTranspose(float** matrix, int size) {
@@ -91,4 +108,37 @@ float** matTransposeImp(float** matrix, int size) {
   }
 
   return trans;
+}
+
+
+float** matTransposeOMP(float** matrix, int size){
+
+ 
+  float** trans = (float**) malloc(size * sizeof(float*));
+  if (trans == NULL) {
+    printf("Memory not allocated for transposed matrix.\n");
+    return NULL;
+  }
+
+  for (int i = 0; i < size; i++) {
+    trans[i] = (float*) malloc(size * sizeof(float));
+    if (trans[i] == NULL) {
+      printf("Memory not allocated for transposed matrix row %d.\n", i);
+      for (int j = 0; j < i; j++) free(trans[j]);
+      free(trans);
+      return NULL;
+    }
+  }
+
+  #pragma omp parallel
+  {
+  #pragma omp for collapse(2)
+  for (int i = 0; i < size; i++) {
+    for (int j = 0; j < size; j++) {
+      trans[j][i] = matrix[i][j];
+    }
+  }
+  }
+  return trans;
+
 }
