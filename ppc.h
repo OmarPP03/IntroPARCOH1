@@ -2,7 +2,7 @@
 #ifndef __PPC_H__
 #define __PPC_H__
 
-
+// Declare used functions
 float getRandomFloat(float min, float max);
 bool checkSym(float **matrix, int size);
 bool checkSymImp(float** matrix, int size);

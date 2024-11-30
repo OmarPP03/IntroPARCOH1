@@ -40,24 +40,22 @@ bool checkSymImp(float** matrix, int size) {
 
 
 bool checkSymOMP(float** matrix, int size) {
-  bool isSym = true;
+  bool isSym = true;                                    // Flag variable
 
-  omp_set_num_threads(4); // Set the number of threads
-
-  #pragma omp parallel shared(isSym)
+  #pragma omp parallel shared(isSym)                    // Start parallel region
   {
-    #pragma omp for schedule(static, 16)
+    #pragma omp for schedule(static, 16)                // Static scheduling with 16
     for (int i = 0; i < size; i++) {
       if (!isSym){
-        #pragma omp flush(isSym)
-        continue; // Check early exit condition
+        #pragma omp flush(isSym)                        // Flush on isSym before checking the flag
+        continue;                                       // Check early exit condition
       }
       for (int j = 0; j < i; j++) {
         if (matrix[i][j] != matrix[j][i]) {
           #pragma omp atomic write 
-          isSym = false; // Set flag to false atomically
+          isSym = false;                                // Set flag to false atomically
           #pragma omp flush(isSym)
-          break; // Exit the inner loop early
+          break;                                        // Exit the inner loop
         }
       }
     }
@@ -67,12 +65,15 @@ bool checkSymOMP(float** matrix, int size) {
 }
 
 float** matTranspose(float** matrix, int size) {
+
+  // Allocate matrix space
   float** trans = (float**) malloc(size * sizeof(float*));
   if (trans == NULL) {
     printf("Memory not allocated for transposed matrix.\n");
     return NULL;
   }
 
+  // Allocate row space
   for (int i = 0; i < size; i++) {
     trans[i] = (float*) malloc(size * sizeof(float));
     if (trans[i] == NULL) {
@@ -83,6 +84,7 @@ float** matTranspose(float** matrix, int size) {
     }
   }
 
+  // Assign values in column major order
   for (int i = 0; i < size; i++) {
     for (int j = 0; j < size; j++) {
       trans[j][i] = matrix[i][j];
@@ -93,6 +95,7 @@ float** matTranspose(float** matrix, int size) {
 
 float** matTransposeImp(float** matrix, int size) {
 
+  // Allocate block of contigous data
   float* data = (float*) malloc(size * size * sizeof(float));
   float** trans = (float**) malloc(size * sizeof(float*));
   if (trans == NULL || data == NULL) {
@@ -109,10 +112,13 @@ float** matTransposeImp(float** matrix, int size) {
   #pragma ivdep 
   #pragma GCC unroll(8)
   for (int i = 0; i < size; i += 8) {          
-    for (int j = 0; j < size; j++) {       
+    for (int j = 0; j < size; j++) {     
+
+      // Prefetch 16 floating point values in L1
       _mm_prefetch((const char*)&matrix[i + 8][j], _MM_HINT_T0);
       _mm_prefetch((const char*)&trans[j][i + 8], _MM_HINT_T0);
-      __m256 row_data = _mm256_set_ps( matrix[i+7][j], 
+
+      __m256 row_data = _mm256_set_ps( matrix[i+7][j],  // Parallel set
                                        matrix[i+6][j], 
                                        matrix[i+5][j], 
                                        matrix[i+4][j],
@@ -120,7 +126,8 @@ float** matTransposeImp(float** matrix, int size) {
                                        matrix[i+2][j], 
                                        matrix[i+1][j], 
                                        matrix[i][j] );
-      _mm256_storeu_ps(&trans[j][i], row_data);
+
+      _mm256_storeu_ps(&trans[j][i], row_data);         // Store 8 floating point values at a time
     }
   }
 
@@ -130,7 +137,6 @@ float** matTransposeImp(float** matrix, int size) {
 
 float** matTransposeOMP(float** matrix, int size){
 
-  int i, j; 
   float** trans = (float**) malloc(size * sizeof(float*));
   if (trans == NULL) {
     printf("Memory not allocated for transposed matrix.\n");
@@ -146,17 +152,19 @@ float** matTransposeOMP(float** matrix, int size){
       return NULL;
     }
   }
-
-
+  
+  //Start parallel region
   #pragma omp parallel
   {
+  int i,j;
   #pragma omp for collapse(2) schedule(static, 16) private(i, j)
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
+  for (i = 0; i < size; i++) {
+    for (j = 0; j < size; j++) {
       trans[j][i] = matrix[i][j];
     }
   }
   }
+
   return trans;
 
 }

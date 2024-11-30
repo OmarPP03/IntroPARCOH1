@@ -14,17 +14,19 @@ int main(){
   double st, ed;
  
   unsigned int exp;
-  printf("\n Give me an exponent to 2: ");
+  printf("\n Give me an exponent to 2: ");                // User input
   scanf("%d", &exp);
-  const int SIZE = 1 << exp;
+  const int SIZE = 1 << exp;                              // Bit shifting to get SIZE = 2^exp
+  
 
-
-  float** a = (float**) malloc(SIZE * sizeof(float*));
+  float** a = (float**) malloc(SIZE * sizeof(float*));    // Allocate space for matrix
   
   if (a == NULL){                                               
     printf("Memory not allocated.\n");
     return EXIT_FAILURE;
   }
+
+  // Allocate space for each row
 
   for(int i = 0; i < SIZE; i++){
     a[i] = (float*) malloc( SIZE * sizeof(float));
@@ -37,12 +39,16 @@ int main(){
       return EXIT_FAILURE;
     }
   }
+
+  // Populate the matrix with random float values
   
   for(int i = 0; i < SIZE; i++){
     for(int j = 0; j < SIZE; j++){
       a[i][j] = getRandomFloat(0.0, 99999.9);
     }
   }
+
+  // Eventually print original matrix for debugging purpouses
  
   /*
  
@@ -54,6 +60,8 @@ int main(){
    
    */
 
+  // Measure time for sequential symmetry check
+
   clock_gettime(CLOCK_REALTIME, &start);
 
   bool sym = checkSym(a, SIZE);
@@ -64,6 +72,8 @@ int main(){
 
   printf("\n Elapsed time for sym check:     %.11f seconds.", elapsed);
 
+  // Measure time for SIMD symmetry check
+
   clock_gettime(CLOCK_REALTIME, &start);
 
   sym = checkSymImp(a, SIZE);
@@ -71,8 +81,10 @@ int main(){
   clock_gettime(CLOCK_REALTIME, &end);
 
   elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
- 
+
   printf("\n Elapsed time for sym check imp: %.11f seconds.", elapsed);
+
+  // Measure time for OMP symmetry check using omp_get_wtime()
 
   st = omp_get_wtime();
 
@@ -82,8 +94,11 @@ int main(){
   
   printf("\n Elapsed time for sym check omp: %.11f seconds.\n", ed - st);
 
+
+
   printf("\n Is the matrix symmetric? %s", sym ? "Yes.\n\n" : "No.\n\n");
 
+  // Measure time for sequential matrix transpose
 
   clock_gettime(CLOCK_REALTIME, &start);
 
@@ -95,6 +110,7 @@ int main(){
 
   printf(" Elapsed time for transpose operation:     %.11f seconds.\n", elapsed);
 
+  // Measure time for SIMD matrix transpose
 
   clock_gettime(CLOCK_REALTIME, &start);
 
@@ -107,6 +123,8 @@ int main(){
   printf(" Elapsed time for transpose operation imp: %.11f seconds.\n", elapsed);
 
   
+  // Measure time for OMP matrix transpose
+
   st = omp_get_wtime();
   
   float** d = matTransposeOMP(a, SIZE);
@@ -115,21 +133,26 @@ int main(){
 
   printf(" Elapsed time for transpose operation omp: %.11f seconds.\n\n", ed - st);
 
+
+  // Eventually print transposed matrix for debugging
 /*
   for(int i = 0; i < SIZE; i++){
     for(int j = 0; j < SIZE; j++){
-      printf("trans[%d][%d] = %f \n", i, j, c[i][j]);
+      printf("trans[%d][%d] = %f \n", i, j, d[i][j]);
     }
   }
   */
   
   
+  // Free rows from memory
+
   for(int i = 0; i < SIZE; i++){
     free(a[i]);
     free(b[i]);
     free(d[i]);
   }
 
+  // Free matrices from memory
 
   free(a);                                                       
   free(b);
