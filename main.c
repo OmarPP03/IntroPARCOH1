@@ -4,26 +4,29 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <omp.h>
 
 int main(){
 
   srand((unsigned int)time(NULL));
 
   struct timespec start, end;
-  
+  double st, ed;
+ 
   unsigned int exp;
-  printf("\n Give me a random exponent to 2: ");
+  printf("\n Give me an exponent to 2: ");
   scanf("%d", &exp);
   const int SIZE = 1 << exp;
 
-  float** a = (float**) malloc(SIZE * sizeof(float*));       
+
+  float** a = (float**) malloc(SIZE * sizeof(float*));
   
   if (a == NULL){                                               
     printf("Memory not allocated.\n");
     return EXIT_FAILURE;
   }
 
-  for(int i = 0; i < SIZE; i++){                                
+  for(int i = 0; i < SIZE; i++){
     a[i] = (float*) malloc( SIZE * sizeof(float));
     if(a[i] == NULL){
       printf("Memory not allocated for row %d.\n", i);
@@ -35,7 +38,7 @@ int main(){
     }
   }
   
-  for(int i = 0; i < SIZE; i++){                                
+  for(int i = 0; i < SIZE; i++){
     for(int j = 0; j < SIZE; j++){
       a[i][j] = getRandomFloat(0.0, 99999.9);
     }
@@ -43,7 +46,7 @@ int main(){
  
   /*
  
-  for(int i = 0; i < SIZE; i++){                                
+  for(int i = 0; i < SIZE; i++){
     for(int j = 0; j < SIZE; j++){
       printf("matrix[%d][%d] = %f \n", i, j, a[i][j]);
     }
@@ -53,7 +56,7 @@ int main(){
 
   clock_gettime(CLOCK_REALTIME, &start);
 
-  bool sym = checkSym(a, SIZE);                
+  bool sym = checkSym(a, SIZE);
 
   clock_gettime(CLOCK_REALTIME, &end);
 
@@ -63,23 +66,21 @@ int main(){
 
   clock_gettime(CLOCK_REALTIME, &start);
 
-  sym = checkSymImp(a, SIZE);                
+  sym = checkSymImp(a, SIZE);
 
   clock_gettime(CLOCK_REALTIME, &end);
 
   elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+ 
+  printf("\n Elapsed time for sym check imp: %.11f seconds.", elapsed);
+
+  st = omp_get_wtime();
+
+  sym = checkSymOMP(a, SIZE);
   
-  printf("\n Elapsed time for sym check imp: %.11f seconds.\n", elapsed);
-
-  clock_gettime(CLOCK_REALTIME, &start);
-
-  sym = checkSymOMP(a, SIZE);               
-
-  clock_gettime(CLOCK_REALTIME, &end);
-
-  elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+  ed = omp_get_wtime();
   
-  printf("\n Elapsed time for sym check omp: %.11f seconds.\n", elapsed);
+  printf("\n Elapsed time for sym check omp: %.11f seconds.\n", ed - st);
 
   printf("\n Is the matrix symmetric? %s", sym ? "Yes.\n\n" : "No.\n\n");
 
@@ -105,20 +106,17 @@ int main(){
 
   printf(" Elapsed time for transpose operation imp: %.11f seconds.\n", elapsed);
 
-
-
-  clock_gettime(CLOCK_REALTIME, &start);
-
+  
+  st = omp_get_wtime();
+  
   float** d = matTransposeOMP(a, SIZE);
 
-  clock_gettime(CLOCK_REALTIME, &end);
+  ed = omp_get_wtime();
 
-  elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-
-  printf(" Elapsed time for transpose operation omp: %.11f seconds.\n\n", elapsed);
+  printf(" Elapsed time for transpose operation omp: %.11f seconds.\n\n", ed - st);
 
 /*
-  for(int i = 0; i < SIZE; i++){                                
+  for(int i = 0; i < SIZE; i++){
     for(int j = 0; j < SIZE; j++){
       printf("trans[%d][%d] = %f \n", i, j, c[i][j]);
     }
@@ -126,7 +124,7 @@ int main(){
   */
   
   
-  for(int i = 0; i < SIZE; i++){                                
+  for(int i = 0; i < SIZE; i++){
     free(a[i]);
     free(b[i]);
     free(d[i]);
@@ -138,6 +136,8 @@ int main(){
   free(c[0]);
   free(c);
   free(d);
+
+
   return 0;
 }
 
