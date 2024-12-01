@@ -16,6 +16,7 @@ To reproduce the results given in the paper, one must follow the given steps bel
 - Compile and run the code:
 
     ```
+    cd IntroPARCOH1
     module load gcc91
     gcc-9.1.0 -o exec main.c ppc.c -mavx2 -fopenmp
     ./exec
