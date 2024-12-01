@@ -1,15 +1,15 @@
 #!/bin/bash
 # Job name
-#PBS -N Cjob
+#PBS -N OPH1 
 # Output files
-#PBS -o ./Cjob.o
-#PBS -e ./Cjob.e
+#PBS -o ./OPH1.o
+#PBS -e ./OPH1.e
 # Queue name
 #PBS -q short_cpuQ
 # Set the maximum wall time
 #PBS -l walltime=0:10:00
 # Number of nodes, cpus, mpi processors and amount of memory
-#PBS -l select=1:ncpus=4:ompthreads=4:mem=1mb
+#PBS -l select=1:ncpus=4:ompthreads=8:mem=1gb
 
 # Modules for C
 module load gcc91
@@ -18,8 +18,7 @@ gcc() {
 }
 gcc --version
 # Select the working directory
-cd /home/username/dir
-git clone https://github.com/OmarPP03/IntroPARCOH1.git
-cd IntroPARCOH1
+cd /home/username
+cd IntroPARCO1
 gcc -o exeC main.c ppc.c -mavx2 -fopenmp
 ./exeC
