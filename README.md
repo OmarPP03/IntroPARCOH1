@@ -3,7 +3,7 @@
 
 To reproduce the results given in the paper, one must follow the given steps below:
 
-- Login into the GlobalConnect VPN using the universities credential;
+- Login into the GlobalConnect VPN using your own university credentials;
 - SSH into the UniTN cluster via _ssh name.surname@hpc.unitn.it_;
     - Linux/OS X users can use the default terminal emulator, while Windows users must download an SSH client like _PuTTY_ or _Mobaxterm_.
 - Clone the repository and run the job:
